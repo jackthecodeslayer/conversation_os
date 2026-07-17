@@ -211,6 +211,7 @@ export function createCvosClient({ gameId, publishableKey, backendUrl } = {}) {
 export function useConversationOS(cvos, roomId, userId, requestedRole = 'player') {
     const [gameState,    setGameState]    = useState(null);
     const [participants, setParticipants] = useState([]);
+    const [pendingParticipants, setPendingParticipants] = useState([]);
     const [roomStatus,   setRoomStatus]   = useState('connecting');
     const [myRole,       setMyRole]       = useState(null);
     const [error,        setError]        = useState(null);
@@ -252,8 +253,36 @@ export function useConversationOS(cvos, roomId, userId, requestedRole = 'player'
         });
 
         socket.on('participant_joined', ({ participant }) => {
-            setParticipants(prev => [...prev, participant]);
+            if (participant.role === 'pending') {
+                setPendingParticipants(prev => [...prev, participant]);
+            } else {
+                setParticipants(prev => [...prev, participant]);
+            }
             cvos._emit('player.joined', participant);
+        });
+        
+        socket.on('participant_admitted', ({ participant }) => {
+            setPendingParticipants(prev => prev.filter(p => p.user_id !== participant.user_id));
+            setParticipants(prev => {
+                const exists = prev.find(p => p.user_id === participant.user_id);
+                if (exists) return prev.map(p => p.user_id === participant.user_id ? participant : p);
+                return [...prev, participant];
+            });
+            if (participant.user_id === userId) {
+                setMyRole(participant.role);
+            }
+        });
+        
+        socket.on('participant_demoted', ({ participant }) => {
+            setPendingParticipants(prev => prev.filter(p => p.user_id !== participant.user_id));
+            setParticipants(prev => {
+                const exists = prev.find(p => p.user_id === participant.user_id);
+                if (exists) return prev.map(p => p.user_id === participant.user_id ? participant : p);
+                return [...prev, participant];
+            });
+            if (participant.user_id === userId) {
+                setMyRole(participant.role);
+            }
         });
 
         socket.on('game_started', () => {
@@ -303,7 +332,19 @@ export function useConversationOS(cvos, roomId, userId, requestedRole = 'player'
         socket.emit('start_game', { roomId, hostId: userId });
     }, [roomId, userId, myRole]);
 
-    return { roomStatus, myRole, participants, gameState, error, sendAction, startGame };
+    const admitUser = useCallback((targetUserId) => {
+        const socket = socketRef.current;
+        if (!socket || myRole !== 'host') return;
+        socket.emit('admit_participant', { roomId, hostId: userId, targetUserId });
+    }, [roomId, userId, myRole]);
+
+    const demoteToSpectator = useCallback((targetUserId) => {
+        const socket = socketRef.current;
+        if (!socket || myRole !== 'host') return;
+        socket.emit('demote_participant', { roomId, hostId: userId, targetUserId });
+    }, [roomId, userId, myRole]);
+
+    return { roomStatus, myRole, participants, pendingParticipants, gameState, error, sendAction, startGame, admitUser, demoteToSpectator };
 }
 
 // ── Legacy hook export (backwards compat) ─────────────────────────────────────

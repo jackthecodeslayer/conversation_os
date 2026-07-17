@@ -32,19 +32,47 @@ function canPlayCard(card, topCard, currentColor) {
 }
 
 export default function App() {
-  const { session, sharedState, updateSharedState, role, sendData } = useConversationOS({
-    defaultSharedState: {
-      gameStarted: false,
-      players: [],
-      hands: {},
-      discardPile: [],
-      deck: [],
-      turnIndex: 0,
-      direction: 1,
-      currentColor: null,
-      winner: null,
-    }
-  });
+  const urlParams = new URLSearchParams(window.location.search);
+  const roomId = urlParams.get('roomId') || 'demo-room';
+  const userId = urlParams.get('userId') || `user-${Math.floor(Math.random()*1000)}`;
+  
+  // Real SDK usage
+  const cvos = window.cvosClient || { _backendUrl: 'https://cvos-backend.onrender.com', _publishableKey: 'pk_demo' }; // Mock fallback
+  
+  const { 
+    roomStatus, 
+    myRole, 
+    participants, 
+    pendingParticipants, 
+    gameState, 
+    sendAction, 
+    startGame, 
+    admitUser, 
+    demoteToSpectator 
+  } = useConversationOS(cvos, roomId, userId, 'player');
+
+  const sharedState = gameState || {
+    gameStarted: false,
+    players: [],
+    hands: {},
+    discardPile: [],
+    deck: [],
+    turnIndex: 0,
+    direction: 1,
+    currentColor: null,
+    winner: null,
+  };
+  
+  const updateSharedState = (newState) => {
+    sendAction('STATE_UPDATE', { ...sharedState, ...newState });
+  };
+  
+  const sendData = (action) => {
+    sendAction(action.type, action.payload);
+  };
+
+  const role = myRole;
+  const session = { participants };
 
   const [selectedWildCard, setSelectedWildCard] = useState(null);
 
@@ -236,7 +264,49 @@ export default function App() {
     );
   };
 
-  if (!session) return <div className="game-container"><div className="glass-panel" style={{padding: '20px'}}>Connecting...</div></div>;
+  if (roomStatus === 'connecting') return <div className="game-container"><div className="glass-panel" style={{padding: '20px'}}>Connecting...</div></div>;
+
+  if (roomStatus === 'lobby') {
+    return (
+      <div className="game-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
+          <h1 style={{ fontSize: '2rem', margin: '0 0 20px 0' }}>Tournament Lobby</h1>
+          <p>You are in the waiting room.</p>
+          
+          {isHost ? (
+            <>
+              <div style={{ margin: '20px 0', textAlign: 'left' }}>
+                <h3 style={{ borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>Waiting Room ({pendingParticipants?.length || 0})</h3>
+                {pendingParticipants?.map(p => (
+                  <div key={p.user_id} style={{ display: 'flex', justifyContent: 'space-between', margin: '10px 0', alignItems: 'center' }}>
+                    <span>User: {p.user_id}</span>
+                    <div>
+                      <button className="btn" style={{ padding: '5px 10px', fontSize: '0.8rem', marginRight: '5px' }} onClick={() => admitUser(p.user_id)}>Admit</button>
+                      <button className="btn" style={{ padding: '5px 10px', fontSize: '0.8rem', background: '#e74c3c' }} onClick={() => demoteToSpectator(p.user_id)}>Deny</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ margin: '20px 0', textAlign: 'left' }}>
+                <h3 style={{ borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>Admitted Players ({participants?.length || 0})</h3>
+                {participants?.map(p => (
+                  <div key={p.user_id} style={{ margin: '5px 0' }}>User: {p.user_id} ({p.role})</div>
+                ))}
+              </div>
+              <button className="btn" onClick={startGame} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                <Play size={20} style={{ marginRight: '10px' }} /> Start Game
+              </button>
+            </>
+          ) : (
+            <div style={{ margin: '20px 0' }}>
+              <Loader2 className="spinner" size={32} style={{ display: 'block', margin: '0 auto 15px auto' }} />
+              <p>Waiting for the host to admit you...</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (isSpectator && !sharedState.gameStarted) {
     return (
@@ -261,7 +331,38 @@ export default function App() {
             {session.participants.length} Players joined
           </div>
           {isHost && (
-            <button className="btn" onClick={startGame} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+            <button className="btn" onClick={() => {
+              // Casual Start Flow
+              startGame();
+              // Trigger the Uno deal state
+              const deck = generateDeck();
+              const playingParticipants = session.participants.filter(p => p.role !== 'spectator');
+              if (playingParticipants.length === 0) return;
+              
+              const players = playingParticipants.map(p => p.user_id || p.id);
+              const hands = {};
+              players.forEach(pId => {
+                hands[pId] = deck.splice(0, 7);
+              });
+              
+              let firstCard = deck.shift();
+              while (firstCard.color === 'wild') {
+                deck.push(firstCard);
+                firstCard = deck.shift();
+              }
+              
+              updateSharedState({
+                gameStarted: true,
+                players,
+                hands,
+                discardPile: [firstCard],
+                deck,
+                turnIndex: 0,
+                direction: 1,
+                currentColor: firstCard.color,
+                winner: null
+              });
+            }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
               <Play size={20} style={{ marginRight: '10px' }} /> Start Game
             </button>
           )}
