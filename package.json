@@ -5,7 +5,8 @@
   "workspaces": [
     "apps/*",
     "packages/*",
-    "packages/demo-games/*"
+    "packages/demo-games/*",
+    "packages/demo-apps/*"
   ]
 }
 
