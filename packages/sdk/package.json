@@ -1,0 +1,42 @@
+{
+  "name": "@cvos/sdk",
+  "version": "1.0.0",
+  "description": "Conversation OS Experience Framework SDK — build multiplayer games and experiences for CVOS",
+  "main": "index.js",
+  "module": "index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.cjs"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.cjs",
+    "README.md"
+  ],
+  "keywords": ["cvos", "multiplayer", "keyboard", "game", "sdk", "real-time"],
+  "author": "CVOS Platform Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cvos/sdk"
+  },
+  "homepage": "https://cvos-portal.vercel.app/docs",
+  "bugs": {
+    "url": "https://github.com/cvos/sdk/issues",
+    "email": "developer@cvos.app"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "socket.io-client": "^4.7.0"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": false },
+    "socket.io-client": { "optional": false }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,300 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap');
+
+:root {
+  --shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+  --wood-bg: #4a3018;
+  --wood-light: #8c5a2b;
+  --wood-dark: #2a1b0e;
+  
+  --tile-bg: #f4d3a2;
+  --tile-shadow: #c7a475;
+  --tile-text: #2a1b0e;
+  
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  
+  --accent: #d35400;
+  --accent-light: #e67e22;
+}
+
+body {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--wood-bg);
+  background-image: 
+    radial-gradient(ellipse at center, rgba(140, 90, 43, 0.4) 0%, rgba(42, 27, 14, 0.8) 100%),
+    repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#root {
+  width: 100%;
+  max-width: 1000px;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+/* Glassmorphism Container */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.08) 0%, rgba(255,255,255,0) 100%);
+  pointer-events: none;
+  border-radius: 20px;
+}
+
+h1.game-title {
+  font-family: 'Playfair Display', serif;
+  text-align: center;
+  font-size: 3rem;
+  margin-top: 0;
+  margin-bottom: 2rem;
+  color: var(--text-main);
+  
+  letter-spacing: 2px;
+}
+
+/* Scrabble Tile Style */
+.tile {
+  background: var(--tile-bg);
+  color: var(--tile-text);
+  border-radius: 8px;
+  width: 50px;
+  height: 50px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  position: relative;
+  box-shadow: 
+    2px 2px 0px var(--tile-shadow),
+    4px 4px 5px rgba(0,0,0,0.08);
+  margin: 4px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  user-select: none;
+}
+
+.tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    3px 3px 0px var(--tile-shadow),
+    6px 6px 8px rgba(0,0,0,0.4);
+}
+
+.tile .points {
+  position: absolute;
+  bottom: 3px;
+  right: 4px;
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+/* Layout */
+.game-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Word Board */
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 300px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.word-entry {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(0,0,0,0.05);
+  padding: 10px 15px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.word-entry .author {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.7);
+  width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.word-entry .word-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.word-entry .word-score {
+  margin-left: auto;
+  font-weight: 800;
+  color: var(--accent-light);
+  font-size: 1.2rem;
+}
+
+/* Input Area */
+.input-area {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.input-area input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  padding: 15px;
+  font-size: 1.2rem;
+  color: var(--text-main);
+  font-family: 'Outfit', sans-serif;
+  text-transform: uppercase;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.input-area input:focus {
+  background: rgba(255,255,255,0.15);
+  border-color: var(--accent-light);
+  box-shadow: 0 0 10px rgba(230, 126, 34, 0.3);
+}
+
+.input-area button {
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  color: var(--text-main);
+  border: none;
+  padding: 15px 30px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(211, 84, 0, 0.4);
+}
+
+.input-area button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(211, 84, 0, 0.6);
+}
+
+.input-area button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Leaderboard */
+.leaderboard {
+  background: rgba(0,0,0,0.08);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+.leaderboard h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.player-score {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  font-size: 1.1rem;
+}
+
+.player-score:last-child {
+  border-bottom: none;
+}
+
+.player-score .name {
+  font-weight: 600;
+}
+
+.player-score .score {
+  color: var(--accent-light);
+  font-weight: 800;
+}
+
+.spectator-badge {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  color: #ccc;
+}
+
+.error-message {
+  color: #ff6b6b;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.3);
+}

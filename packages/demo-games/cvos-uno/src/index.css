@@ -1,0 +1,281 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+:root {
+  --shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+  --uno-red: #ff3b30;
+  --uno-blue: #007aff;
+  --uno-green: #34c759;
+  --uno-yellow: #ffcc00;
+  --uno-dark: #1c1c1e;
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --font-family: 'Outfit', sans-serif;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background: radial-gradient(circle at center, #2c2c2e 0%, #1c1c1e 100%);
+  color: var(--text-main);
+  height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Glass Panel Utility */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+/* Uno Card Base */
+.uno-card {
+  width: 100px;
+  height: 150px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  box-shadow: var(--glass-shadow);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, margin 0.3s ease;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 800;
+  font-size: 2.5rem;
+  color: var(--text-main);
+  
+  background-color: var(--uno-dark);
+}
+
+.uno-card::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 8px;
+  transform: rotate(-15deg);
+  opacity: 0.2;
+}
+
+.uno-card:hover:not(.disabled) {
+  transform: translateY(-15px) scale(1.05);
+  box-shadow: 0 15px 45px 0 rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+.uno-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.card-red { background: linear-gradient(135deg, #ff4b40, #cc2b20); }
+.card-blue { background: linear-gradient(135deg, #108aff, #0056b3); }
+.card-green { background: linear-gradient(135deg, #44d769, #249749); }
+.card-yellow { background: linear-gradient(135deg, #ffdc10, #cca300); }
+.card-wild { background: linear-gradient(135deg, var(--uno-red) 0%, var(--uno-yellow) 33%, var(--uno-green) 66%, var(--uno-blue) 100%); }
+
+.card-value {
+  z-index: 1;
+}
+
+.card-corner {
+  position: absolute;
+  font-size: 1rem;
+  font-weight: 600;
+  z-index: 1;
+}
+
+.card-corner.top-left { top: 8px; left: 8px; }
+.card-corner.bottom-right { bottom: 8px; right: 8px; transform: rotate(180deg); }
+
+/* Layouts */
+.game-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  margin-bottom: 20px;
+}
+
+.player-list {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.player-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border-radius: 12px;
+  min-width: 80px;
+  transition: all 0.3s ease;
+  background: var(--glass-bg);
+  border: 1px solid transparent;
+}
+
+.player-avatar.active {
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.play-area {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.deck-area {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.deck-pile {
+  width: 100px;
+  height: 150px;
+  background: linear-gradient(135deg, #3a3a3c, #1c1c1e);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.deck-pile:hover {
+  transform: scale(1.05);
+}
+
+.discard-pile {
+  position: relative;
+}
+
+.hand-area {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+  min-height: 200px;
+}
+
+.hand-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 800px;
+}
+
+.spectator-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.spectator-badge {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--glass-bg);
+  color: var(--text-main);
+  border: 1px solid var(--glass-border);
+}
+
+.btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.color-picker {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+}
+
+.color-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid white;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.color-btn:hover {
+  transform: scale(1.1);
+}
+
+.current-color-indicator {
+  margin-top: 15px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  
+}

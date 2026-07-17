@@ -1,0 +1,13 @@
+{
+  "name": "@cvos/game-flashcards",
+  "version": "1.0.0",
+  "description": "Conversation OS Collaborative Flashcards",
+  "main": "index.js",
+  "dependencies": {
+    "@cvos/sdk": "1.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-native": "*"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Conversation OS",
+    "slug": "cvos",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.astuteweb.cvos"
+    },
+    "android": {
+      "package": "com.astuteweb.cvos"
+    },
+    "plugins": [
+      "./plugins/withCustomKeyboard.js"
+    ]
+  }
+}

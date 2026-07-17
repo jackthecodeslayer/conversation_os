@@ -1,0 +1,207 @@
+:root {
+  --shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+  --bg-dark: #0a0e17;
+  --grid-blue: rgba(0, 195, 255, 0.2);
+  --grid-blue-glow: rgba(0, 195, 255, 0.6);
+  --chip-red: #ff3366;
+  --chip-red-glow: rgba(255, 51, 102, 0.8);
+  --chip-yellow: #ffcc00;
+  --chip-yellow-glow: rgba(255, 204, 0, 0.8);
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --text-primary: #e2e8f0;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #131b2f 0%, #0a0e17 100%);
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  background: linear-gradient(90deg, #fff, #8cb4ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+}
+
+.status {
+  font-size: 1.2rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.status.p1-turn {
+  color: var(--chip-red);
+  
+  border-color: rgba(255, 51, 102, 0.3);
+}
+
+.status.p2-turn {
+  color: var(--chip-yellow);
+  
+  border-color: rgba(255, 204, 0, 0.3);
+}
+
+.board {
+  display: flex;
+  background: var(--grid-blue);
+  padding: 1rem;
+  border-radius: 16px;
+  box-shadow: 0 0 30px var(--grid-blue-glow), inset 0 0 20px rgba(0, 195, 255, 0.2);
+  border: 2px solid rgba(0, 195, 255, 0.4);
+  backdrop-filter: blur(12px);
+  gap: 8px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 35px;
+  transition: background-color 0.2s ease;
+}
+
+.column:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.column.disabled {
+  cursor: not-allowed;
+}
+.column.disabled:hover {
+  background-color: transparent;
+}
+
+.cell {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--bg-dark);
+  box-shadow: inset 0 4px 6px rgba(0,0,0,0.6), inset 0 0 10px rgba(0,0,0,0.8);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chip {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  animation: dropIn 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.chip.p1 {
+  background: radial-gradient(circle at 30% 30%, #ff6b93 0%, var(--chip-red) 50%, #cc0033 100%);
+  box-shadow: 0 0 15px var(--chip-red-glow), inset 0 2px 4px rgba(255,255,255,0.4);
+}
+
+.chip.p2 {
+  background: radial-gradient(circle at 30% 30%, #ffdf4d 0%, var(--chip-yellow) 50%, #ccaa00 100%);
+  box-shadow: 0 0 15px var(--chip-yellow-glow), inset 0 2px 4px rgba(255,255,255,0.4);
+}
+
+.chip.win {
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes dropIn {
+  0% { transform: translateY(-400px); opacity: 0; }
+  60% { transform: translateY(20px); opacity: 1; }
+  80% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.1); filter: brightness(1.3); }
+}
+
+.controls {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+button {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+button:hover {
+  background: rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+.spectator-badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  backdrop-filter: blur(10px);
+}
