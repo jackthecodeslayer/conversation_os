@@ -21,9 +21,6 @@
     "android": {
       "package": "com.astuteweb.cvos"
     },
-    "plugins": [
-      "./plugins/withCustomKeyboard.js"
-    ],
     "extra": {
       "eas": {
         "projectId": "d36e2efd-5a6b-4c6a-8187-ee1a7764455f"

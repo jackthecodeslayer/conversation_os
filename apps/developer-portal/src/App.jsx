@@ -5,7 +5,7 @@ import './index.css';
 
 import Analytics from './pages/Analytics.jsx';
 import Monetization from './pages/Monetization.jsx';
-import Games from './pages/Games.jsx';
+import Games, { GameDetail } from './pages/Games.jsx';
 import Docs from './pages/Docs.jsx';
 import Legal from './pages/Legal.jsx';
 import Team from './pages/Team.jsx';
@@ -14,7 +14,6 @@ import Login from './pages/Login.jsx';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { createGame, uploadGameAsset } from './services/api.js';
 
-const MOCK_GAMES = [
   { id: '1', name: 'Tic-Tac-Toe Pro', status: 'active', players: '12.4k', mrr: '$450' },
   { id: '2', name: 'Word Battles', status: 'pending', players: '-', mrr: '-' },
 ];
@@ -40,7 +39,7 @@ function LandingPage() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', minHeight: '100vh', padding: '0 2rem' }}>
       <div className="animate-fade-in-up">
-        <Terminal size={64} color="var(--accent)" style={{ marginBottom: '1.5rem', filter: 'drop-shadow(0 0 20px rgba(0, 112, 243, 0.5))' }} />
+        <img src="/logo.png" alt="CVOS Logo" style={{ height: '64px', marginBottom: '1.5rem', filter: 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.2))' }} />
       </div>
       <h1 className="animate-fade-in-up delay-100" style={{ fontSize: '4rem', fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '1.5rem', maxWidth: '800px', background: 'linear-gradient(to right, #FFF, #8B8B8B)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
         Make Every Conversation Playable.
@@ -118,9 +117,9 @@ function Sidebar() {
   return (
     <div className="sidebar animate-slide-in-right">
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '2rem', padding: '0 0.5rem' }}>
-        <Terminal size={22} color="#FFF" />
-        <Link to="/" style={{ textDecoration: 'none' }}>
-          <h2 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 700 }}>CVOS <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>Developers</span></h2>
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <img src="/logo.png" alt="CVOS Logo" style={{ height: '24px' }} />
+          <span style={{ fontSize: '1.05rem', margin: 0, fontWeight: 400, color: 'var(--text-secondary)' }}>Developers</span>
         </Link>
       </div>
 
@@ -153,11 +152,32 @@ function Sidebar() {
 }
 
 function Overview() {
+  const { developer } = useAuth();
+  const [games, setGames] = useState([]);
+  const [stats, setStats] = useState({ players: 0, mrr: 0 });
+
+  useEffect(() => {
+    if (!developer?.id) return;
+    
+    // Fetch games list
+    fetch(`https://cvos-backend.onrender.com/api/games?developerId=${developer.id}`)
+      .then(res => res.json())
+      .then(data => setGames(data.games || []));
+
+    // Fetch stats
+    fetch(`https://cvos-backend.onrender.com/api/developer/${developer.id}/analytics`)
+      .then(res => res.json())
+      .then(data => {
+        const mrrCents = (data.games || []).reduce((sum, g) => sum + g.mrr_cents, 0);
+        setStats({ mrr: mrrCents / 100, players: 12402 }); // mock players for now
+      });
+  }, [developer]);
+
   return (
     <div className="animate-fade-in-up">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 className="animate-slide-in-right">Welcome back, Astute Studio.</h1>
+          <h1 className="animate-slide-in-right">Welcome back, {developer?.company_name || 'Studio'}.</h1>
           <p className="animate-slide-in-right delay-100">Here's what's happening across your games today.</p>
         </div>
         <Link to="/submit" className="btn-primary animate-scale-up delay-200">
@@ -167,12 +187,12 @@ function Overview() {
       <div className="grid-3 animate-fade-in-up delay-300">
         <div className="card interactive-card">
           <p>Total Active Players (24h)</p>
-          <div className="metric-value">12,402</div>
+          <div className="metric-value">{stats.players.toLocaleString()}</div>
           <p style={{ color: 'var(--success)', fontSize: '0.85rem', marginTop: '0.5rem' }}>↗ 14% vs yesterday</p>
         </div>
         <div className="card interactive-card">
           <p>Current MRR</p>
-          <div className="metric-value">$450.00</div>
+          <div className="metric-value">${stats.mrr.toFixed(2)}</div>
           <p style={{ color: 'var(--success)', fontSize: '0.85rem', marginTop: '0.5rem' }}>↗ 18% vs last month</p>
         </div>
         <div className="card interactive-card">
@@ -195,14 +215,17 @@ function Overview() {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_GAMES.map((game, i) => (
+                {games.slice(0, 5).map((game, i) => (
                   <tr key={game.id} style={{ borderBottom: i === 0 ? '1px solid var(--border)' : 'none' }}>
-                    <td style={{ padding: '0.9rem 1rem', fontWeight: 500, color: '#FFF' }}>{game.name}</td>
+                    <td style={{ padding: '0.9rem 1rem', fontWeight: 500, color: '#FFF' }}>{game.title}</td>
                     <td style={{ padding: '0.9rem 1rem' }}><span className={`badge ${game.status === 'active' ? 'active' : 'pending'}`}>{game.status.toUpperCase()}</span></td>
-                    <td style={{ padding: '0.9rem 1rem' }}>{game.players}</td>
-                    <td style={{ padding: '0.9rem 1rem' }}>{game.mrr}</td>
+                    <td style={{ padding: '0.9rem 1rem' }}>-</td>
+                    <td style={{ padding: '0.9rem 1rem' }}>${(game.mrr_cents || 0) / 100}</td>
                   </tr>
                 ))}
+                {games.length === 0 && (
+                  <tr><td colSpan="4" style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No games found.</td></tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -403,11 +426,6 @@ function Keys() {
   );
 }
 
-function GameDetailWrapper() {
-  const { id } = useParams();
-  return <Games gameId={id} />;
-}
-
 function DashboardLayout({ children }) {
   return (
     <>
@@ -441,7 +459,7 @@ function App() {
             {/* Protected routes */}
             <Route path="/dashboard" element={<RequireAuth><DashboardLayout><Overview /></DashboardLayout></RequireAuth>} />
             <Route path="/games" element={<RequireAuth><DashboardLayout><Games /></DashboardLayout></RequireAuth>} />
-            <Route path="/games/:id" element={<RequireAuth><DashboardLayout><GameDetailWrapper /></DashboardLayout></RequireAuth>} />
+            <Route path="/games/:id" element={<RequireAuth><DashboardLayout><GameDetail /></DashboardLayout></RequireAuth>} />
             <Route path="/analytics" element={<RequireAuth><DashboardLayout><Analytics /></DashboardLayout></RequireAuth>} />
             <Route path="/monetization" element={<RequireAuth><DashboardLayout><Monetization /></DashboardLayout></RequireAuth>} />
             <Route path="/keys" element={<RequireAuth><DashboardLayout><Keys /></DashboardLayout></RequireAuth>} />

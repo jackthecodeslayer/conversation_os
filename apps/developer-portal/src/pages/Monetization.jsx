@@ -1,38 +1,119 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { AlertTriangle, ExternalLink, Plus, Trash2, DollarSign } from 'lucide-react';
-
-const revenueByGame = [
-  { name: 'Tic-Tac-Toe Pro', value: 320, color: '#0070F3' },
-  { name: 'Word Battles', value: 130, color: '#7928CA' },
-];
-
-const payouts = [
-  { date: 'Jul 15, 2026', amount: '$450.00', status: 'pending', games: 'All Games' },
-  { date: 'Jun 15, 2026', amount: '$380.00', status: 'paid', games: 'All Games' },
-  { date: 'May 15, 2026', amount: '$210.00', status: 'paid', games: 'All Games' },
-  { date: 'Apr 15, 2026', amount: '$95.00', status: 'paid', games: 'All Games' },
-];
+import { useAuth } from '../context/AuthContext';
 
 const ENTITLEMENT_TYPES = ['One-Time Item', 'Paid Entry', 'Consumable Credits'];
 
-const initialProducts = [
-  { id: 'outfit_001', name: 'Princess Gown', type: 'One-Time Item', price: '0.99', game: 'Tic-Tac-Toe Pro' },
-  { id: 'coins_500', name: '500 Style Coins', type: 'Consumable Credits', price: '1.99', game: 'Tic-Tac-Toe Pro' },
-];
-
 export default function Monetization() {
-  const [products, setProducts] = useState(initialProducts);
+  const { developer } = useAuth();
+  const [products, setProducts] = useState([]);
+  const [payouts, setPayouts] = useState([]);
+  const [revenueByGame, setRevenueByGame] = useState([]);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [newProduct, setNewProduct] = useState({ name: '', type: 'One-Time Item', price: '' });
+  const [loading, setLoading] = useState(true);
 
-  const addProduct = () => {
-    if (!newProduct.name || !newProduct.price) return;
-    const id = newProduct.name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now().toString().slice(-4);
-    setProducts(prev => [...prev, { ...newProduct, id, game: 'Tic-Tac-Toe Pro' }]);
-    setNewProduct({ name: '', type: 'One-Time Item', price: '' });
-    setShowAddProduct(false);
+  useEffect(() => {
+    if (!developer?.id) return;
+    async function loadData() {
+      try {
+        const [statsRes, payoutsRes] = await Promise.all([
+          fetch(`https://cvos-backend.onrender.com/api/developer/${developer.id}/analytics`),
+          fetch(`https://cvos-backend.onrender.com/api/developer/${developer.id}/payouts`)
+        ]);
+        
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          // Transform games into pie chart format
+          const pieData = (stats.games || []).map((g, i) => ({
+            name: g.title,
+            value: g.mrr_cents / 100,
+            color: ['#0070F3', '#7928CA', '#F5A623', '#50E3C2'][i % 4]
+          })).filter(g => g.value > 0);
+          setRevenueByGame(pieData);
+        }
+
+        if (payoutsRes.ok) {
+          const p = await payoutsRes.json();
+          setPayouts(p.payouts || []);
+        }
+      } catch (err) {
+        console.error('Failed to load monetization data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [developer]);
+
+  const addProduct = async () => {
+    if (!newProduct.name || !newProduct.price || !developer) return;
+    const priceCents = Math.round(parseFloat(newProduct.price) * 100);
+    const entitlementId = newProduct.name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now().toString().slice(-4);
+    
+    // Default to the first game for the portal demo
+    const gameId = 'demo-game-1';
+
+    try {
+      const res = await fetch(`https://cvos-backend.onrender.com/api/games/${gameId}/products`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          developerId: developer.id,
+          name: newProduct.name,
+          type: newProduct.type,
+          priceCents,
+          entitlementId
+        })
+      });
+      if (res.ok) {
+        const { product } = await res.json();
+        setProducts(prev => [...prev, { ...product, price: (product.price_cents/100).toFixed(2) }]);
+        setNewProduct({ name: '', type: 'One-Time Item', price: '' });
+        setShowAddProduct(false);
+      }
+    } catch (err) {
+      alert("Failed to create product");
+    }
   };
+
+  const connectStripe = async () => {
+    try {
+      const res = await fetch('https://cvos-backend.onrender.com/api/developer/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          developerId: developer.id,
+          email: developer.contact_email,
+          returnUrl: window.location.href,
+          refreshUrl: window.location.href
+        })
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch (err) {
+      alert("Failed to connect Stripe");
+    }
+  };
+
+  if (loading) return <div>Loading...</div>;
+
+  // Stripe Onboarding Gate
+  if (!developer?.stripe_account_id) {
+    return (
+      <div className="animate-fade-in-up" style={{ textAlign: 'center', marginTop: '4rem' }}>
+        <DollarSign size={64} color="var(--accent)" style={{ marginBottom: '1.5rem', filter: 'drop-shadow(0 0 20px rgba(0, 112, 243, 0.5))' }} />
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Get Paid for Your Games</h1>
+        <p style={{ color: 'var(--text-secondary)', maxWidth: 500, margin: '0 auto 2rem', lineHeight: 1.6 }}>
+          CVOS partners with Stripe to process payments and send payouts directly to your bank account. Connect your account to enable In-App Products.
+        </p>
+        <button className="btn-primary" onClick={connectStripe} style={{ padding: '1rem 2rem', fontSize: '1.1rem' }}>
+          Connect Stripe Account
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in-up">

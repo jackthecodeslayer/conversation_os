@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useConversationOS } from '@cvos/sdk';
-import { Pen, Hand, Users, Eye } from 'lucide-react';
+import { Pen, Hand, Users, Eye, Download } from 'lucide-react';
 import './index.css';
 
 const COLORS = ['#0f172a', '#ef4444', '#3b82f6', '#10b981', '#f59e0b'];
@@ -19,6 +19,7 @@ export default function App() {
 
   const canvasRef = useRef(null);
   
+  const [offlineMode, setOfflineMode] = useState(false);
   const [tool, setTool] = useState('draw');
   const [color, setColor] = useState(COLORS[0]);
   
@@ -36,10 +37,10 @@ export default function App() {
 
   // Initialize state on host
   useEffect(() => {
-    if (connected && role === 'host' && !sharedState.lines) {
+    if ((connected && role === 'host' || offlineMode) && !sharedState.lines) {
       updateState({ lines: [] });
     }
-  }, [connected, role, sharedState.lines, updateState]);
+  }, [connected, role, sharedState.lines, updateState, offlineMode]);
 
   // Host-authoritative event handling
   useEffect(() => {
@@ -138,7 +139,7 @@ export default function App() {
   };
 
   const handlePointerDown = (e) => {
-    if (role === 'spectator') return; // Intercept pointer events for spectators
+    if (role === 'spectator' && !offlineMode) return; // Intercept pointer events for spectators
     
     if (tool === 'pan' || e.button === 1 || e.button === 2) {
       setIsPanning(true);
@@ -154,7 +155,7 @@ export default function App() {
   };
 
   const handlePointerMove = (e) => {
-    if (role === 'spectator') return;
+    if (role === 'spectator' && !offlineMode) return;
     
     if (isPanning && lastPanPoint) {
       const dx = e.clientX - lastPanPoint.x;
@@ -170,7 +171,7 @@ export default function App() {
   };
 
   const handlePointerUp = (e) => {
-    if (role === 'spectator') return;
+    if (role === 'spectator' && !offlineMode) return;
     
     if (isPanning) {
       setIsPanning(false);
@@ -178,7 +179,7 @@ export default function App() {
     } else if (isDrawing) {
       setIsDrawing(false);
       if (currentLine && currentLine.points.length > 1) {
-        if (role === 'host') {
+        if (role === 'host' || offlineMode) {
           // Host updates state directly
           const currentLines = sharedStateRef.current?.lines || [];
           updateState({ lines: [...currentLines, currentLine] });
@@ -196,24 +197,58 @@ export default function App() {
     }
   };
 
-  if (!connected) {
-    return <div className="loading-container">Connecting to CVOS...</div>;
+  const exportPDF = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const ctx = tempCanvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    ctx.drawImage(canvas, 0, 0);
+
+    const imgData = tempCanvas.toDataURL('image/png');
+    const { jsPDF } = await import('jspdf');
+    const pdf = new jsPDF({
+      orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+      unit: 'px',
+      format: [canvas.width, canvas.height]
+    });
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+    pdf.save('CVOS_Whiteboard_Export.pdf');
+  };
+
+  if (!connected && !offlineMode) {
+    return (
+      <div className="loading-container">
+        <p>Connecting to CVOS...</p>
+        <button className="primary-button" onClick={() => setOfflineMode(true)} style={{marginTop: 20}}>
+          Start Personal Doodling (Offline)
+        </button>
+      </div>
+    );
   }
 
-  const isSpectator = role === 'spectator';
+  const isSpectator = role === 'spectator' && !offlineMode;
 
   return (
     <div className="whiteboard-container">
       <div className="header-card">
         <h1>CVOS Whiteboard</h1>
         <div className="user-count">
-          <Users size={16} /> Host-Authoritative
+          <Users size={16} /> {offlineMode ? 'Local Mode' : 'Host-Authoritative'}
         </div>
         {isSpectator && (
           <div className="spectator-badge">
             <Eye size={14} /> View Only
           </div>
         )}
+        <button className="tool-button" onClick={exportPDF} title="Export as PDF" style={{marginLeft: 10}}>
+          <Download size={20} />
+        </button>
       </div>
 
       {!isSpectator && (

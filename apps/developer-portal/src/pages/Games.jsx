@@ -1,25 +1,25 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronRight, Globe, Webhook, Layers, FlaskConical, Copy, Check } from 'lucide-react';
-
-const GAMES = [
-  { id: '1', name: 'Tic-Tac-Toe Pro', status: 'active', players: '12.4k', mrr: '$450', version: '2.1.0', emoji: '🎮' },
-  { id: '2', name: 'Word Battles', status: 'pending', players: '-', mrr: '-', version: '0.9.0-beta', emoji: '📝' },
-];
+import React, { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { ChevronRight, Globe, Webhook, Layers, FlaskConical, Copy, Check, Gamepad2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 function GameCard({ game }) {
+  // Use uploaded icon if available, otherwise fallback emoji
+  const iconContent = game.app_icon_url 
+    ? <img src={game.app_icon_url} alt="" style={{ width: '100%', height: '100%', borderRadius: 14, objectFit: 'cover' }} />
+    : <Gamepad2 size={28} color="var(--accent)" />;
   return (
     <Link to={`/games/${game.id}`} style={{ textDecoration: 'none' }}>
       <div className="card interactive-card" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', cursor: 'pointer' }}>
-        <div style={{ width: 56, height: 56, borderRadius: 14, backgroundColor: 'var(--surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>
-          {game.emoji}
+        <div style={{ width: 56, height: 56, borderRadius: 14, backgroundColor: 'var(--surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          {iconContent}
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.35rem' }}>
-            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>{game.name}</h3>
+            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>{game.title}</h3>
             <span className={`badge ${game.status === 'active' ? 'active' : 'pending'}`}>{game.status.toUpperCase()}</span>
           </div>
-          <p style={{ fontSize: '0.85rem' }}>v{game.version} · {game.players} players · {game.mrr} MRR</p>
+          <p style={{ fontSize: '0.85rem' }}>v{game.version || '1.0.0'} · {game.category}</p>
         </div>
         <ChevronRight size={18} color="var(--text-secondary)" />
       </div>
@@ -27,10 +27,24 @@ function GameCard({ game }) {
   );
 }
 
-function GameDetail({ gameId }) {
-  const game = GAMES.find(g => g.id === gameId) || GAMES[0];
+export function GameDetail() {
+  const { id } = useParams();
+  const { developer } = useAuth();
+  const [game, setGame] = useState(null);
   const [tab, setTab] = useState('listing');
   const [copied, setCopied] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!developer?.id || !id) return;
+    fetch(`https://cvos-backend.onrender.com/api/games?developerId=${developer.id}`)
+      .then(res => res.json())
+      .then(data => {
+        const found = data.games.find(g => g.id === id);
+        setGame(found);
+        setLoading(false);
+      });
+  }, [developer, id]);
 
   const copy = (text, key) => {
     navigator.clipboard.writeText(text);
@@ -45,23 +59,30 @@ function GameDetail({ gameId }) {
     { id: 'testing', label: 'Testing', icon: <FlaskConical size={15} /> },
   ];
 
+  if (loading) return <div>Loading...</div>;
+  if (!game) return <div>Game not found.</div>;
+
+  const iconContent = game.app_icon_url 
+    ? <img src={game.app_icon_url} alt="" style={{ width: '100%', height: '100%', borderRadius: 18, objectFit: 'cover' }} />
+    : <Gamepad2 size={36} color="var(--accent)" />;
+
   return (
     <div className="animate-fade-in-up">
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
         <Link to="/games" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Games</Link>
         <ChevronRight size={14} color="var(--text-secondary)" />
-        <span style={{ fontSize: '0.9rem', color: '#FFF' }}>{game.name}</span>
+        <span style={{ fontSize: '0.9rem', color: '#FFF' }}>{game.title}</span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-        <div style={{ width: 72, height: 72, borderRadius: 18, backgroundColor: 'var(--surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>
-          {game.emoji}
+        <div style={{ width: 72, height: 72, borderRadius: 18, backgroundColor: 'var(--surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {iconContent}
         </div>
         <div>
-          <h1 style={{ margin: 0 }}>{game.name}</h1>
+          <h1 style={{ margin: 0 }}>{game.title}</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.35rem' }}>
             <span className={`badge ${game.status === 'active' ? 'active' : 'pending'}`}>{game.status.toUpperCase()}</span>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>v{game.version}</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>v{game.version || '1.0.0'}</span>
           </div>
         </div>
       </div>
@@ -82,22 +103,22 @@ function GameDetail({ gameId }) {
         <div className="card interactive-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 500, fontSize: '0.9rem' }}>Display Name</label>
-            <input className="input-field" defaultValue={game.name} style={{ width: '100%', padding: '0.7rem', borderRadius: 6, backgroundColor: 'var(--background)', border: '1px solid var(--border)', color: '#FFF', outline: 'none' }} />
+            <input className="input-field" defaultValue={game.title} style={{ width: '100%', padding: '0.7rem', borderRadius: 6, backgroundColor: 'var(--background)', border: '1px solid var(--border)', color: '#FFF', outline: 'none' }} />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 500, fontSize: '0.9rem' }}>Short Description</label>
-            <textarea rows={3} defaultValue="Classic two-player strategy game. Challenge a friend and send the invite directly in chat." style={{ width: '100%', padding: '0.7rem', borderRadius: 6, backgroundColor: 'var(--background)', border: '1px solid var(--border)', color: '#FFF', outline: 'none', resize: 'vertical', fontFamily: 'var(--font-sans)' }} />
+            <textarea rows={3} defaultValue={game.short_description || ''} style={{ width: '100%', padding: '0.7rem', borderRadius: 6, backgroundColor: 'var(--background)', border: '1px solid var(--border)', color: '#FFF', outline: 'none', resize: 'vertical', fontFamily: 'var(--font-sans)' }} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 500, fontSize: '0.9rem' }}>Category</label>
-              <select defaultValue="Games" style={{ width: '100%', padding: '0.7rem', borderRadius: 6, backgroundColor: 'var(--background)', border: '1px solid var(--border)', color: '#FFF', outline: 'none' }}>
+              <select defaultValue={game.category || "Games"} style={{ width: '100%', padding: '0.7rem', borderRadius: 6, backgroundColor: 'var(--background)', border: '1px solid var(--border)', color: '#FFF', outline: 'none' }}>
                 <option>Games</option><option>Study</option><option>Productivity</option><option>Creative</option>
               </select>
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 500, fontSize: '0.9rem' }}>Web App URL</label>
-              <input className="input-field" defaultValue="https://ttt.cvos.app" style={{ width: '100%', padding: '0.7rem', borderRadius: 6, backgroundColor: 'var(--background)', border: '1px solid var(--border)', color: '#FFF', outline: 'none' }} />
+              <input className="input-field" defaultValue={game.web_app_url || ''} style={{ width: '100%', padding: '0.7rem', borderRadius: 6, backgroundColor: 'var(--background)', border: '1px solid var(--border)', color: '#FFF', outline: 'none' }} />
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
@@ -184,8 +205,22 @@ function GameDetail({ gameId }) {
   );
 }
 
-export default function Games({ gameId }) {
-  if (gameId) return <GameDetail gameId={gameId} />;
+export default function Games() {
+  const { developer } = useAuth();
+  const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!developer?.id) return;
+    fetch(`https://cvos-backend.onrender.com/api/games?developerId=${developer.id}`)
+      .then(res => res.json())
+      .then(data => {
+        setGames(data.games || []);
+        setLoading(false);
+      });
+  }, [developer]);
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="animate-fade-in-up">
@@ -199,7 +234,11 @@ export default function Games({ gameId }) {
         </Link>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {GAMES.map(game => <GameCard key={game.id} game={game} />)}
+        {games.length === 0 ? (
+           <p style={{ color: 'var(--text-secondary)' }}>No games submitted yet.</p>
+        ) : (
+           games.map(game => <GameCard key={game.id} game={game} />)
+        )}
       </div>
     </div>
   );

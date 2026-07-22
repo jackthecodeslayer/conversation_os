@@ -315,14 +315,14 @@ export function useConversationOS(cvos, roomId, userId, requestedRole = 'player'
         };
     }, [roomId, userId, requestedRole]);
 
-    const sendAction = useCallback((action, newState) => {
+    const sendAction = useCallback((action, newState, notifyUserIds, gameName) => {
         const socket = socketRef.current;
         if (!socket || roomStatus !== 'active') return;
         if (myRole === 'spectator') {
             console.warn('[cvos] Spectators cannot send game actions.');
             return;
         }
-        socket.emit('game_action', { roomId, action, userId, newState });
+        socket.emit('game_action', { roomId, action, userId, newState, notifyUserIds, gameName });
         if (newState !== undefined) setGameState(newState);
     }, [roomId, userId, myRole, roomStatus]);
 
