@@ -13,10 +13,11 @@ import { THEME } from './src/theme';
 
 // Stock First-Party Experiences available natively in the Play Dock
 const STOCK_EXPERIENCES = [
-    // Core Card & Board Games
-    { id: '1', name: 'Uno Live', emoji: '🃏', category: 'Card Game', url: 'https://cvos-uno.vercel.app', isHot: true },
-    { id: '2', name: 'Wordle Blitz', emoji: '🟩', category: 'Word Puzzle', url: 'https://cvos-wordle.vercel.app', isHot: true },
-    { id: '3', name: 'Connect 4', emoji: '🔴', category: 'Board Game', url: 'https://cvos-connect-four.vercel.app' },
+    // Flagship Card & Board Games
+    { id: '1', name: 'Chess Masters', emoji: '♟️', category: 'Classic Board', url: 'https://cvos-chess.vercel.app', isHot: true },
+    { id: '2', name: 'Uno Live', emoji: '🃏', category: 'Card Game', url: 'https://cvos-uno.vercel.app', isHot: true },
+    { id: '3', name: 'Wordle Blitz', emoji: '🟩', category: 'Word Puzzle', url: 'https://cvos-wordle.vercel.app', isHot: true },
+    { id: '4', name: 'Connect 4', emoji: '🔴', category: 'Board Game', url: 'https://cvos-connect-four.vercel.app' },
     
     // Productivity & Collaboration Tools
     { id: '4', name: 'Whiteboard', emoji: '✏️', category: 'Productivity', url: 'https://cvos-whiteboard.vercel.app', isHot: true },
