@@ -46,7 +46,7 @@ export default function App() {
     pendingParticipants, 
     gameState, 
     sendAction, 
-    startGame, 
+    startGame: startTournamentGame, 
     admitUser, 
     demoteToSpectator 
   } = useConversationOS(cvos, roomId, userId, 'player');
