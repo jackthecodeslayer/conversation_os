@@ -1,18 +1,19 @@
-const { withAndroidManifest, withDangerousMod, createRunOncePlugin } = require('@expo/config-plugins');
+const { withAndroidManifest, withDangerousMod, withXcodeProject, createRunOncePlugin } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
 const pkg = require('../package.json');
 
 /**
- * Injects the custom InputMethodService declaration into AndroidManifest.xml
+ * -------------------------------------------------------------
+ * ANDROID: Injects InputMethodService into AndroidManifest.xml
+ * -------------------------------------------------------------
  */
 const withAndroidKeyboardManifest = (config) => {
     return withAndroidManifest(config, async (config) => {
         const manifest = config.modResults.manifest;
         const mainApplication = manifest.application[0];
 
-        // Ensure service isn't duplicated
         if (!mainApplication.service) {
             mainApplication.service = [];
         }
@@ -50,8 +51,9 @@ const withAndroidKeyboardManifest = (config) => {
 };
 
 /**
- * Copies native Java/XML resources (CvosKeyboardService.java, method.xml, keyboard_view.xml)
- * into the generated Android project directory during `expo prebuild`.
+ * -------------------------------------------------------------
+ * ANDROID: Injects native Java and XML resources into Android project
+ * -------------------------------------------------------------
  */
 const withAndroidKeyboardFiles = (config) => {
     return withDangerousMod(config, [
@@ -60,7 +62,6 @@ const withAndroidKeyboardFiles = (config) => {
             const projectRoot = config.modRequest.projectRoot;
             const androidAppDir = path.join(projectRoot, 'android', 'app');
             
-            // 1. Target directories in the generated android build
             const javaDir = path.join(androidAppDir, 'src', 'main', 'java', 'com', 'astuteweb', 'cvos');
             const resXmlDir = path.join(androidAppDir, 'src', 'main', 'res', 'xml');
             const resLayoutDir = path.join(androidAppDir, 'src', 'main', 'res', 'layout');
@@ -69,10 +70,7 @@ const withAndroidKeyboardFiles = (config) => {
             fs.mkdirSync(resXmlDir, { recursive: true });
             fs.mkdirSync(resLayoutDir, { recursive: true });
 
-            // 2. Source templates directory
-            const templatesDir = path.join(projectRoot, 'plugins', 'android', 'templates');
-
-            // 3. Write CvosKeyboardService.java
+            // 1. CvosKeyboardService.java
             const serviceContent = `package com.astuteweb.cvos;
 
 import android.inputmethodservice.InputMethodService;
@@ -110,7 +108,7 @@ public class CvosKeyboardService extends InputMethodService {
             }
         });
 
-        // Points to our live conversational play dock
+        // Live conversational Play Dock
         keyboardWebView.loadUrl("https://cvos-backend.onrender.com/keyboard");
     }
 
@@ -135,7 +133,7 @@ public class CvosKeyboardService extends InputMethodService {
 `;
             fs.writeFileSync(path.join(javaDir, 'CvosKeyboardService.java'), serviceContent, 'utf8');
 
-            // 4. Write method.xml (IME descriptor)
+            // 2. method.xml
             const methodContent = `<?xml version="1.0" encoding="utf-8"?>
 <input-method xmlns:android="http://schemas.android.com/apk/res/android"
     android:settingsActivity="com.astuteweb.cvos.MainActivity">
@@ -147,7 +145,7 @@ public class CvosKeyboardService extends InputMethodService {
 `;
             fs.writeFileSync(path.join(resXmlDir, 'method.xml'), methodContent, 'utf8');
 
-            // 5. Write keyboard_view.xml layout
+            // 3. keyboard_view.xml
             const layoutContent = `<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -169,9 +167,50 @@ public class CvosKeyboardService extends InputMethodService {
     ]);
 };
 
+/**
+ * -------------------------------------------------------------
+ * APPLE iOS: Copies native Swift Keyboard Extension files
+ * -------------------------------------------------------------
+ */
+const withIosKeyboardFiles = (config) => {
+    return withDangerousMod(config, [
+        'ios',
+        async (config) => {
+            const projectRoot = config.modRequest.projectRoot;
+            const iosDir = path.join(projectRoot, 'ios');
+            const targetDir = path.join(iosDir, 'CVOSKeyboard');
+            const sourceDir = path.join(projectRoot, 'plugins', 'ios');
+
+            fs.mkdirSync(targetDir, { recursive: true });
+
+            // Copy KeyboardViewController.swift & Info.plist
+            if (fs.existsSync(sourceDir)) {
+                const files = fs.readdirSync(sourceDir);
+                for (const file of files) {
+                    const srcPath = path.join(sourceDir, file);
+                    const destPath = path.join(targetDir, file);
+                    fs.copyFileSync(srcPath, destPath);
+                }
+            }
+
+            return config;
+        }
+    ]);
+};
+
+/**
+ * -------------------------------------------------------------
+ * MAIN CONFIG PLUGIN EXPORT (Cross-Platform Android & iOS)
+ * -------------------------------------------------------------
+ */
 const withCustomKeyboard = (config) => {
+    // Android Pipeline
     config = withAndroidKeyboardManifest(config);
     config = withAndroidKeyboardFiles(config);
+    
+    // iOS Pipeline
+    config = withIosKeyboardFiles(config);
+    
     return config;
 };
 
