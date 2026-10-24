@@ -9,26 +9,27 @@ import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 import { WebView } from 'react-native-webview';
-import Storefront from './src/screens/Storefront';
 import { THEME } from './src/theme';
 
-// Default apps available on the keyboard Play Dock
-const DEFAULT_APPS = [
-    { id: '1', name: 'Uno', emoji: '🃏', category: 'Card Game', url: 'https://cvos-uno.vercel.app', isHot: true },
-    { id: '2', name: 'Wordle', emoji: '🟩', category: 'Word Puzzle', url: 'https://cvos-wordle.vercel.app' },
+// Stock First-Party Experiences available natively in the Play Dock
+const STOCK_EXPERIENCES = [
+    { id: '1', name: 'Uno Live', emoji: '🃏', category: 'Card Game', url: 'https://cvos-uno.vercel.app', isHot: true },
+    { id: '2', name: 'Wordle Blitz', emoji: '🟩', category: 'Word Puzzle', url: 'https://cvos-wordle.vercel.app', isHot: true },
     { id: '3', name: 'Connect 4', emoji: '🔴', category: 'Board Game', url: 'https://cvos-connect-four.vercel.app' },
     { id: '4', name: 'Whiteboard', emoji: '✏️', category: 'Productivity', url: 'https://cvos-whiteboard.vercel.app' },
     { id: '5', name: 'Tic-Tac-Toe', emoji: '❌', category: 'Quick Match', url: 'https://cvos-tictactoe.vercel.app' },
-    { id: '6', name: 'Trivia Blitz', emoji: '🎯', category: 'Trivia Game', url: 'https://cvos-trivia.vercel.app' }
+    { id: '6', name: 'Trivia Blitz', emoji: '🎯', category: 'Trivia Game', url: 'https://cvos-trivia.vercel.app' },
+    { id: '7', name: 'Flick Darts', emoji: '🎯', category: 'Arcade', url: 'https://cvos-flick-darts.vercel.app' },
+    { id: '8', name: 'Archery Clash', emoji: '🏹', category: 'Arcade', url: 'https://cvos-archery-clash.vercel.app' },
+    { id: '9', name: 'Word Forge', emoji: '🔤', category: 'Word Game', url: 'https://cvos-word-forge.vercel.app' },
 ];
 
 export default function App() {
-    const [storeOpen, setStoreOpen] = useState(false);
     const [activeWebView, setActiveWebView] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
     
-    // Sample active session simulating live in-chat games
-    const [activeSessions, setActiveSessions] = useState([
+    // Live active sessions tracking
+    const [activeSessions] = useState([
         {
             id: 'session-101',
             gameName: 'Uno Live',
@@ -59,7 +60,7 @@ export default function App() {
                 const { user } = await res.json();
                 setCurrentUser(user);
                 userObj = user;
-            } catch (err) {
+            } catch (_err) {
                 userObj = { id: 'user-' + Math.floor(Math.random()*1000) };
                 setCurrentUser(userObj);
             }
@@ -87,7 +88,7 @@ export default function App() {
                                 platform: Platform.OS
                             })
                         });
-                    } catch (e) {
+                    } catch (_e) {
                         // Silent push registration fallback
                     }
                 }
@@ -101,7 +102,7 @@ export default function App() {
         setActiveWebView(`${url}?roomId=demo-room&userId=${userId}`);
     };
 
-    // Refined App Bubble Component (Tactile iMessage Play Dock item)
+    // Tactile Bubble Component for the Keyboard Play Dock
     const AppBubble = ({ app }) => (
         <TouchableOpacity 
             style={styles.bubble} 
@@ -131,23 +132,20 @@ export default function App() {
                     </View>
                     <View>
                         <Text style={styles.brandTitle}>Conversation OS</Text>
-                        <Text style={styles.brandSubtitle}>Play in chat • Instant zero-install</Text>
+                        <Text style={styles.brandSubtitle}>Play in chat • Zero-install multiplayer</Text>
                     </View>
                 </View>
-                <TouchableOpacity 
-                    style={styles.storeShortcutBadge}
-                    onPress={() => setStoreOpen(true)}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.storeShortcutText}>+ Store</Text>
-                </TouchableOpacity>
+                <View style={styles.statusPill}>
+                    <View style={styles.statusLiveDot} />
+                    <Text style={styles.statusPillText}>Ready</Text>
+                </View>
             </View>
 
-            {/* Top Viewport: Chat Active Sessions Hub */}
+            {/* Top Viewport: In-Chat Live Activity Hub */}
             <View style={styles.chatArea}>
                 <View style={styles.sectionTitleRow}>
-                    <Text style={styles.sectionBadge}>LIVE ACTIVITY</Text>
-                    <Text style={styles.activeCountBadge}>{activeSessions.length} active</Text>
+                    <Text style={styles.sectionBadge}>ACTIVE SESSIONS</Text>
+                    <Text style={styles.activeCountBadge}>{activeSessions.length} live</Text>
                 </View>
 
                 {activeSessions.length > 0 ? (
@@ -179,8 +177,8 @@ export default function App() {
                     ))
                 ) : (
                     <View style={styles.emptySessionCard}>
-                        <Text style={styles.emptySessionTitle}>No active games yet</Text>
-                        <Text style={styles.emptySessionSub}>Tap any game from the dock below to send an invite into your chat.</Text>
+                        <Text style={styles.emptySessionTitle}>No active games</Text>
+                        <Text style={styles.emptySessionSub}>Tap any experience in the Play Dock below to challenge someone in your conversation.</Text>
                     </View>
                 )}
 
@@ -191,16 +189,14 @@ export default function App() {
                 </View>
             </View>
 
-            {/* Bottom Viewport: The "Play Dock" (iMessage-inspired Keyboard Accessory) */}
+            {/* Bottom Viewport: The "Play Dock" (All First-Party Stock Experiences) */}
             <View style={styles.dockContainer}>
-                {/* Dock Header with Pill Action */}
+                {/* Dock Header */}
                 <View style={styles.dockHeader}>
                     <View style={styles.dockHeaderLeft}>
                         <Text style={styles.dockTitle}>CVOS PLAY DOCK</Text>
                     </View>
-                    <TouchableOpacity onPress={() => setStoreOpen(true)} style={styles.seeAllPill} activeOpacity={0.7}>
-                        <Text style={styles.seeAllText}>Browse Storefront →</Text>
-                    </TouchableOpacity>
+                    <Text style={styles.dockCountBadge}>{STOCK_EXPERIENCES.length} Experiences</Text>
                 </View>
 
                 {/* Horizontal App Bubbles Carousel */}
@@ -209,27 +205,20 @@ export default function App() {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.bubbleScroll}
                 >
-                    {DEFAULT_APPS.map(app => <AppBubble key={app.id} app={app} />)}
+                    {STOCK_EXPERIENCES.map(app => <AppBubble key={app.id} app={app} />)}
                 </ScrollView>
 
-                {/* Storefront Access Bento Card */}
-                <View style={styles.storefrontSection}>
-                    <TouchableOpacity 
-                        style={styles.storefrontButton} 
-                        onPress={() => setStoreOpen(true)} 
-                        activeOpacity={0.88}
-                    >
-                        <View style={styles.storefrontIconContainer}>
-                            <Text style={styles.storefrontEmoji}>🛍️</Text>
+                {/* Quick Share / Invite Banner */}
+                <View style={styles.inviteCardSection}>
+                    <View style={styles.inviteCard}>
+                        <View style={styles.inviteIconBox}>
+                            <Text style={styles.inviteEmoji}>💬</Text>
                         </View>
-                        <View style={styles.storefrontTextWrap}>
-                            <Text style={styles.storefrontCardTitle}>Explore CVOS Arcade</Text>
-                            <Text style={styles.storefrontCardSub}>Add 20+ multiplayer games & widgets to your dock</Text>
+                        <View style={styles.inviteTextWrap}>
+                            <Text style={styles.inviteCardTitle}>Play Anywhere in Chat</Text>
+                            <Text style={styles.inviteCardSub}>Friends don't need the app to play with you. Links open instantly.</Text>
                         </View>
-                        <View style={styles.storefrontArrowBadge}>
-                            <Text style={styles.storefrontArrowText}>→</Text>
-                        </View>
-                    </TouchableOpacity>
+                    </View>
                 </View>
             </View>
 
@@ -256,26 +245,6 @@ export default function App() {
                         />
                     )}
                 </SafeAreaView>
-            </Modal>
-
-            {/* Slide-Up Storefront Experience Modal */}
-            <Modal visible={storeOpen} animationType="slide">
-                <View style={styles.storeModalContainer}>
-                    <View style={styles.storeModalHeader}>
-                        <View style={styles.sheetHandle} />
-                        <View style={styles.storeHeaderActionRow}>
-                            <Text style={styles.storeModalHeaderTitle}>CVOS Storefront</Text>
-                            <TouchableOpacity 
-                                style={styles.closeStoreBtn} 
-                                onPress={() => setStoreOpen(false)}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={styles.closeStoreText}>Done</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                    <Storefront />
-                </View>
             </Modal>
         </SafeAreaView>
     );
@@ -328,18 +297,27 @@ const styles = StyleSheet.create({
         color: THEME.colors.textSecondary,
         fontWeight: '500',
     },
-    storeShortcutBadge: {
-        backgroundColor: THEME.colors.surfaceMuted,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
+    statusPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: '#ECFDF5',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
         borderRadius: THEME.radii.pill,
         borderWidth: 1,
-        borderColor: THEME.colors.borderProminent,
+        borderColor: '#A7F3D0',
     },
-    storeShortcutText: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: THEME.colors.brandPrimary,
+    statusLiveDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: THEME.colors.success,
+    },
+    statusPillText: {
+        fontSize: 11,
+        fontWeight: '800',
+        color: '#065F46',
     },
 
     // Upper Chat Area
@@ -495,7 +473,7 @@ const styles = StyleSheet.create({
 
     // Bottom Play Dock (Keyboard Drawer)
     dockContainer: { 
-        backgroundColor: '#F1F5F9', // Modern neutral dock surface
+        backgroundColor: '#F1F5F9',
         paddingTop: 12,
         paddingBottom: Platform.OS === 'ios' ? 18 : 12,
         borderTopWidth: 1,
@@ -512,7 +490,6 @@ const styles = StyleSheet.create({
     dockHeaderLeft: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
     },
     dockTitle: { 
         fontSize: 12, 
@@ -520,15 +497,16 @@ const styles = StyleSheet.create({
         color: THEME.colors.textSecondary, 
         letterSpacing: 0.6,
     },
-    seeAllPill: {
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: THEME.radii.pill,
-    },
-    seeAllText: {
-        fontSize: 12,
+    dockCountBadge: {
+        fontSize: 11,
         fontWeight: '700',
-        color: THEME.colors.brandPrimary,
+        color: THEME.colors.textSecondary,
+        backgroundColor: THEME.colors.surfaceCard,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: THEME.radii.pill,
+        borderWidth: 1,
+        borderColor: THEME.colors.borderSubtle,
     },
 
     // Bubbles
@@ -589,12 +567,12 @@ const styles = StyleSheet.create({
         color: THEME.colors.textSecondary,
     },
 
-    // Storefront Bento Section
-    storefrontSection: {
+    // Invite Card Section
+    inviteCardSection: {
         paddingHorizontal: THEME.spacing.lg,
         marginTop: 2,
     },
-    storefrontButton: {
+    inviteCard: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
@@ -604,7 +582,7 @@ const styles = StyleSheet.create({
         borderColor: THEME.colors.borderSubtle,
         ...THEME.shadows.soft,
     },
-    storefrontIconContainer: {
+    inviteIconBox: {
         width: 40, 
         height: 40, 
         borderRadius: 12, 
@@ -615,36 +593,22 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#DBEAFE',
     },
-    storefrontEmoji: { 
+    inviteEmoji: { 
         fontSize: 20, 
     },
-    storefrontTextWrap: {
+    inviteTextWrap: {
         flex: 1,
     },
-    storefrontCardTitle: { 
-        fontSize: 14, 
+    inviteCardTitle: { 
+        fontSize: 13, 
         fontWeight: '800', 
         color: THEME.colors.textPrimary,
     },
-    storefrontCardSub: { 
+    inviteCardSub: { 
         fontSize: 11, 
         color: THEME.colors.textSecondary, 
         marginTop: 2,
-    },
-    storefrontArrowBadge: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: THEME.colors.surfaceMuted,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: THEME.colors.borderSubtle,
-    },
-    storefrontArrowText: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: THEME.colors.textSecondary,
+        lineHeight: 15,
     },
 
     // Webview Full-screen Modal
@@ -681,49 +645,4 @@ const styles = StyleSheet.create({
         fontWeight: '700', 
         color: '#FFFFFF' 
     },
-
-    // Storefront Modal
-    storeModalContainer: { 
-        flex: 1, 
-        backgroundColor: THEME.colors.bgApp, 
-        paddingTop: Platform.OS === 'android' ? 16 : 8,
-    },
-    storeModalHeader: {
-        paddingHorizontal: THEME.spacing.lg,
-        paddingBottom: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: THEME.colors.borderSubtle,
-        backgroundColor: '#FFFFFF',
-    },
-    sheetHandle: {
-        width: 36,
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: THEME.colors.borderProminent,
-        alignSelf: 'center',
-        marginTop: 6,
-        marginBottom: 10,
-    },
-    storeHeaderActionRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingBottom: 4,
-    },
-    storeModalHeaderTitle: {
-        fontSize: 17,
-        fontWeight: '800',
-        color: THEME.colors.textPrimary,
-    },
-    closeStoreBtn: {
-        backgroundColor: '#EFF6FF',
-        paddingHorizontal: 14,
-        paddingVertical: 6,
-        borderRadius: THEME.radii.pill,
-    },
-    closeStoreText: { 
-        fontSize: 13, 
-        fontWeight: '700', 
-        color: THEME.colors.brandPrimary 
-    }
 });
