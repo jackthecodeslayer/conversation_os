@@ -20,18 +20,18 @@ const STOCK_EXPERIENCES = [
     { id: '4', name: 'Connect 4', emoji: '🔴', category: 'Board Game', url: 'https://cvos-connect-four.vercel.app' },
     
     // Productivity & Collaboration Tools
-    { id: '4', name: 'Whiteboard', emoji: '✏️', category: 'Productivity', url: 'https://cvos-whiteboard.vercel.app', isHot: true },
-    { id: '5', name: 'Splitter', emoji: '🧾', category: 'Productivity', url: 'https://cvos-splitter.vercel.app', isHot: true },
-    { id: '6', name: 'Planner', emoji: '📅', category: 'Productivity', url: 'https://cvos-planner.vercel.app' },
+    { id: '5', name: 'Whiteboard', emoji: '✏️', category: 'Productivity', url: 'https://cvos-whiteboard.vercel.app', isHot: true },
+    { id: '6', name: 'Splitter', emoji: '🧾', category: 'Productivity', url: 'https://cvos-splitter.vercel.app', isHot: true },
+    { id: '7', name: 'Planner', emoji: '📅', category: 'Productivity', url: 'https://cvos-planner.vercel.app' },
     
     // Social Party & Arcade Games
-    { id: '7', name: 'Undercover', emoji: '🕵️', category: 'Party Game', url: 'https://cvos-undercover.vercel.app' },
-    { id: '8', name: 'Scribble Chat', emoji: '🎨', category: 'Party Game', url: 'https://cvos-scribble.vercel.app' },
-    { id: '9', name: 'Trivia Blitz', emoji: '🎯', category: 'Trivia Game', url: 'https://cvos-trivia.vercel.app' },
-    { id: '10', name: 'Flick Darts', emoji: '🎯', category: 'Arcade', url: 'https://cvos-flick-darts.vercel.app' },
-    { id: '11', name: 'Archery Clash', emoji: '🏹', category: 'Arcade', url: 'https://cvos-archery-clash.vercel.app' },
-    { id: '12', name: 'Word Forge', emoji: '🔤', category: 'Word Game', url: 'https://cvos-word-forge.vercel.app' },
-    { id: '13', name: 'Tic-Tac-Toe', emoji: '❌', category: 'Quick Match', url: 'https://cvos-tictactoe.vercel.app' },
+    { id: '8', name: 'Undercover', emoji: '🕵️', category: 'Party Game', url: 'https://cvos-undercover.vercel.app' },
+    { id: '9', name: 'Scribble Chat', emoji: '🎨', category: 'Party Game', url: 'https://cvos-scribble.vercel.app' },
+    { id: '10', name: 'Trivia Blitz', emoji: '🎯', category: 'Trivia Game', url: 'https://cvos-trivia.vercel.app' },
+    { id: '11', name: 'Flick Darts', emoji: '🎯', category: 'Arcade', url: 'https://cvos-flick-darts.vercel.app' },
+    { id: '12', name: 'Archery Clash', emoji: '🏹', category: 'Arcade', url: 'https://cvos-archery-clash.vercel.app' },
+    { id: '13', name: 'Word Forge', emoji: '🔤', category: 'Word Game', url: 'https://cvos-word-forge.vercel.app' },
+    { id: '14', name: 'Tic-Tac-Toe', emoji: '❌', category: 'Quick Match', url: 'https://cvos-tictactoe.vercel.app' },
 ];
 
 export default function App() {
