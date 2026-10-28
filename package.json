@@ -2,6 +2,9 @@
   "name": "conversation-os-monorepo",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "build:hub": "node scripts/build-hub.js"
+  },
   "workspaces": [
     "apps/*",
     "packages/*",
@@ -9,4 +12,3 @@
     "packages/demo-apps/*"
   ]
 }
-

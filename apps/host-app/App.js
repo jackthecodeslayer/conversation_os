@@ -11,27 +11,30 @@ import * as Crypto from 'expo-crypto';
 import { WebView } from 'react-native-webview';
 import { THEME } from './src/theme';
 
+// Global Unified Hub base URL - defaults to Cloudflare Pages edge hub with Render fallback
+const CVOS_HUB_BASE_URL = process.env.EXPO_PUBLIC_CVOS_HUB_URL || 'https://cvos-hub.pages.dev';
+
 // Stock First-Party Experiences available natively in the Play Dock
 const STOCK_EXPERIENCES = [
     // Flagship Card & Board Games
-    { id: '1', name: 'Chess Masters', emoji: '♟️', category: 'Classic Board', url: 'https://cvos-chess.vercel.app', isHot: true },
-    { id: '2', name: 'Uno Live', emoji: '🃏', category: 'Card Game', url: 'https://cvos-uno.vercel.app', isHot: true },
-    { id: '3', name: 'Wordle Blitz', emoji: '🟩', category: 'Word Puzzle', url: 'https://cvos-wordle.vercel.app', isHot: true },
-    { id: '4', name: 'Connect 4', emoji: '🔴', category: 'Board Game', url: 'https://cvos-connect-four.vercel.app' },
+    { id: '1', name: 'Chess Masters', emoji: '♟️', category: 'Classic Board', slug: 'chess', isHot: true },
+    { id: '2', name: 'Uno Live', emoji: '🃏', category: 'Card Game', slug: 'uno', isHot: true },
+    { id: '3', name: 'Wordle Blitz', emoji: '🟩', category: 'Word Puzzle', slug: 'wordle', isHot: true },
+    { id: '4', name: 'Connect 4', emoji: '🔴', category: 'Board Game', slug: 'connect-four' },
     
     // Productivity & Collaboration Tools
-    { id: '5', name: 'Whiteboard', emoji: '✏️', category: 'Productivity', url: 'https://cvos-whiteboard.vercel.app', isHot: true },
-    { id: '6', name: 'Splitter', emoji: '🧾', category: 'Productivity', url: 'https://cvos-splitter.vercel.app', isHot: true },
-    { id: '7', name: 'Planner', emoji: '📅', category: 'Productivity', url: 'https://cvos-planner.vercel.app' },
+    { id: '5', name: 'Whiteboard', emoji: '✏️', category: 'Productivity', slug: 'whiteboard', isHot: true },
+    { id: '6', name: 'Splitter', emoji: '🧾', category: 'Productivity', slug: 'splitter', isHot: true },
+    { id: '7', name: 'Planner', emoji: '📅', category: 'Productivity', slug: 'planner' },
     
     // Social Party & Arcade Games
-    { id: '8', name: 'Undercover', emoji: '🕵️', category: 'Party Game', url: 'https://cvos-undercover.vercel.app' },
-    { id: '9', name: 'Scribble Chat', emoji: '🎨', category: 'Party Game', url: 'https://cvos-scribble.vercel.app' },
-    { id: '10', name: 'Trivia Blitz', emoji: '🎯', category: 'Trivia Game', url: 'https://cvos-trivia.vercel.app' },
-    { id: '11', name: 'Flick Darts', emoji: '🎯', category: 'Arcade', url: 'https://cvos-flick-darts.vercel.app' },
-    { id: '12', name: 'Archery Clash', emoji: '🏹', category: 'Arcade', url: 'https://cvos-archery-clash.vercel.app' },
-    { id: '13', name: 'Word Forge', emoji: '🔤', category: 'Word Game', url: 'https://cvos-word-forge.vercel.app' },
-    { id: '14', name: 'Tic-Tac-Toe', emoji: '❌', category: 'Quick Match', url: 'https://cvos-tictactoe.vercel.app' },
+    { id: '8', name: 'Undercover', emoji: '🕵️', category: 'Party Game', slug: 'undercover' },
+    { id: '9', name: 'Scribble Chat', emoji: '🎨', category: 'Party Game', slug: 'scribble' },
+    { id: '10', name: 'Trivia Blitz', emoji: '🎯', category: 'Trivia Game', slug: 'trivia' },
+    { id: '11', name: 'Flick Darts', emoji: '🎯', category: 'Arcade', slug: 'darts' },
+    { id: '12', name: 'Archery Clash', emoji: '🏹', category: 'Arcade', slug: 'archery' },
+    { id: '13', name: 'Word Forge', emoji: '🔤', category: 'Word Game', slug: 'word-forge' },
+    { id: '14', name: 'Tic-Tac-Toe', emoji: '❌', category: 'Quick Match', slug: 'tictactoe' },
 ];
 
 export default function App() {
@@ -48,7 +51,7 @@ export default function App() {
             status: 'YOUR TURN',
             isMyTurn: true,
             lastPlayed: '2m ago',
-            url: 'https://cvos-uno.vercel.app'
+            target: 'uno'
         }
     ]);
 
@@ -107,8 +110,11 @@ export default function App() {
         setupPushAndUser();
     }, []);
 
-    const launchExperience = (url) => {
+    const launchExperience = (target) => {
         const userId = currentUser?.id || 'demo-user';
+        const url = target.startsWith('http') 
+            ? target 
+            : `${CVOS_HUB_BASE_URL}/${target}/`;
         setActiveWebView(`${url}?roomId=demo-room&userId=${userId}`);
     };
 
@@ -117,7 +123,7 @@ export default function App() {
         <TouchableOpacity 
             style={styles.bubble} 
             activeOpacity={0.78}
-            onPress={() => launchExperience(app.url)}
+            onPress={() => launchExperience(app.slug || app.url)}
         >
             <View style={styles.bubbleIconWrap}>
                 <Text style={styles.bubbleEmoji}>{app.emoji}</Text>
@@ -164,7 +170,7 @@ export default function App() {
                             key={session.id} 
                             style={styles.activeSessionCard}
                             activeOpacity={0.85}
-                            onPress={() => launchExperience(session.url)}
+                            onPress={() => launchExperience(session.target || session.url)}
                         >
                             <View style={styles.sessionIconBox}>
                                 <Text style={styles.sessionEmoji}>{session.emoji}</Text>

@@ -1,13 +1,23 @@
 {
-  "name": "@cvos/game-tic-tac-toe",
+  "name": "tic-tac-toe",
+  "private": true,
   "version": "1.0.0",
-  "description": "Conversation OS Tic-Tac-Toe Game",
-  "main": "index.js",
-  "dependencies": {
-    "@cvos/sdk": "1.0.0"
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "peerDependencies": {
-    "react": "^18.0.0",
-    "react-native": "*"
+  "dependencies": {
+    "@cvos/sdk": "^1.0.0",
+    "lucide-react": "^1.24.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "vite": "^8.1.1"
   }
 }
